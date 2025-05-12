@@ -1,0 +1,26 @@
+{
+  "name": "frontend-trends-updater",
+  "version": "1.0.0",
+  "description": "노션에 프론트엔드 트렌드를 자동으로 업데이트하는 스크립트",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "frontend",
+    "trends",
+    "notion",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
+  }
+}
