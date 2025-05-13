@@ -42,11 +42,70 @@ async function main() {
   }
 }
 
+// 기존 데이터베이스 항목 검사 함수
+async function checkDuplicateTrend(title, url, source) {
+  try {
+    // URL로 중복 확인 (더 정확한 방법)
+    const urlResponse = await notion.databases.query({
+      database_id: databaseId,
+      filter: {
+        property: 'URL',
+        url: {
+          equals: url
+        }
+      }
+    });
+    
+    if (urlResponse.results.length > 0) {
+      return true; // 중복 발견
+    }
+    
+    // 제목으로 중복 확인 (URL이 변경되었을 수 있음)
+    const titleResponse = await notion.databases.query({
+      database_id: databaseId,
+      filter: {
+        and: [
+          {
+            property: '제목',
+            title: {
+              contains: title
+            }
+          },
+          {
+            property: '소스',
+            select: {
+              equals: source
+            }
+          }
+        ]
+      }
+    });
+    
+    return titleResponse.results.length > 0;
+  } catch (error) {
+    console.error(`중복 검사 중 오류: ${title}`, error);
+    return false; // 오류 발생 시 중복이 아니라고 가정
+  }
+}
+
 async function addTrendsToNotion(source, trends, date) {
   console.log(`${source} 트렌드 노션에 추가 중...`);
   
+  let addedCount = 0;
+  let skippedCount = 0;
+  
   for (const trend of trends) {
     try {
+      // 중복 검사
+      const isDuplicate = await checkDuplicateTrend(trend.title, trend.url, source);
+      
+      if (isDuplicate) {
+        console.log(`중복 항목 건너뜀: ${trend.title}`);
+        skippedCount++;
+        continue;
+      }
+      
+      // 새 항목 추가
       await notion.pages.create({
         parent: { database_id: databaseId },
         properties: {
@@ -85,10 +144,13 @@ async function addTrendsToNotion(source, trends, date) {
       });
       
       console.log(`추가됨: ${trend.title}`);
+      addedCount++;
     } catch (error) {
       console.error(`항목 추가 실패: ${trend.title}`, error);
     }
   }
+  
+  console.log(`${source} 처리 완료: ${addedCount}개 추가, ${skippedCount}개 건너뜀`);
 }
 
 main(); 

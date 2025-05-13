@@ -13,7 +13,7 @@ export async function getTrendingRepos() {
     
     // 트렌딩 레포지토리 목록 추출
     $('article.Box-row').each((index, element) => {
-      if (index >= 5) return; // 상위 5개만 가져오기
+      if (index >= 10) return; // 상위 10개만 가져오기(더 많은 데이터 확보)
       
       const $element = $(element);
       
@@ -22,6 +22,14 @@ export async function getTrendingRepos() {
       const title = $element.find('h2').text().trim().replace(/\s+/g, ' ');
       const description = $element.find('p').text().trim();
       const url = `https://github.com/${repoPath}`;
+      
+      // 스타 수 추출 (인기도 판단용)
+      let stars = 0;
+      const starsText = $element.find('span.d-inline-block.float-sm-right').text().trim();
+      if (starsText) {
+        const match = starsText.match(/\d+/);
+        if (match) stars = parseInt(match[0], 10);
+      }
       
       // 필터링: 프론트엔드 관련 키워드 확인
       const frontendKeywords = ['react', 'vue', 'angular', 'svelte', 'frontend', 'ui', 'component', 'web', 'css', 'html', 'javascript', 'typescript'];
@@ -35,7 +43,9 @@ export async function getTrendingRepos() {
         repos.push({
           title,
           description,
-          url
+          url,
+          stars,
+          source: 'js'
         });
       }
     });
@@ -45,7 +55,7 @@ export async function getTrendingRepos() {
     const $ts = cheerio.load(tsResponse.data);
     
     $ts('article.Box-row').each((index, element) => {
-      if (index >= 5) return; // 상위 5개만 가져오기
+      if (index >= 10) return; // 상위 10개만 가져오기(더 많은 데이터 확보)
       
       const $element = $(element);
       
@@ -54,6 +64,14 @@ export async function getTrendingRepos() {
       const title = $element.find('h2').text().trim().replace(/\s+/g, ' ');
       const description = $element.find('p').text().trim();
       const url = `https://github.com/${repoPath}`;
+      
+      // 스타 수 추출 (인기도 판단용)
+      let stars = 0;
+      const starsText = $element.find('span.d-inline-block.float-sm-right').text().trim();
+      if (starsText) {
+        const match = starsText.match(/\d+/);
+        if (match) stars = parseInt(match[0], 10);
+      }
       
       // 필터링: 프론트엔드 관련 키워드 확인
       const frontendKeywords = ['react', 'vue', 'angular', 'svelte', 'frontend', 'ui', 'component', 'web', 'css', 'html'];
@@ -67,13 +85,18 @@ export async function getTrendingRepos() {
         repos.push({
           title,
           description,
-          url
+          url,
+          stars,
+          source: 'ts'
         });
       }
     });
     
-    console.log(`GitHub에서 ${repos.length}개의 프론트엔드 관련 레포지토리를 찾았습니다.`);
-    return repos;
+    // 인기도(스타 수)로 정렬하고 상위 결과만 반환
+    const sortedRepos = repos.sort((a, b) => b.stars - a.stars).slice(0, 10);
+    
+    console.log(`GitHub에서 ${sortedRepos.length}개의 프론트엔드 관련 레포지토리를 찾았습니다.`);
+    return sortedRepos;
   } catch (error) {
     console.error('GitHub 트렌딩 데이터 가져오기 오류:', error);
     return [];
