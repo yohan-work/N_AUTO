@@ -4,8 +4,10 @@ import { getTrendingRepos } from './sources/github.js';
 import { getNpmTrends } from './sources/npm.js';
 import { getDevToArticles } from './sources/devto.js';
 
-// 환경 변수 로드
-dotenv.config();
+// 환경 변수 로드 (개발 환경에서만)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 // Notion 클라이언트 설정
 const notion = new Client({ 
